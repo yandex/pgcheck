@@ -1,0 +1,11 @@
+/var/log/pgcheck/pgcheck.log {
+    start 0
+    rotate 30
+    daily
+    nocompress
+    missingok
+    notifempty
+    nocreate
+    dateext
+    copytruncate
+}

@@ -1,0 +1,19 @@
+# [Python]
+*.pyo
+*.pyc
+*.sw[o-s]
+
+# [IDE Specific]
+.idea/
+*.iml
+
+# [tox]
+.tox/
+
+# [Build]
+build/
+dist/
+docs/_build
+*.egg-info/
+noarch/
+INSTALLED_FILES
