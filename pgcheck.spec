@@ -9,7 +9,7 @@ Release: 2%{?dist}
 
 Summary: Meta package for pgcheck
 License: Yandex License
-Packager: Borodin Vladimir <d0uble@yandex-team.ru>
+Packager: Borodin Vladimir <root@simply.name>
 Group: System Environment/Meta
 Distribution: Red Hat Enterprise Linux
 
@@ -23,7 +23,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildArch: noarch
 
 %description
-https://github.yandex-team.ru/d0uble/pgcheck
+https://github.com/yandex/pgcheck
 
 %install
 %{__rm} -rf %{buildroot}
@@ -35,5 +35,5 @@ rm -rf $RPM_BUILD_ROOT
 %files -f INSTALLED_FILES
 
 %changelog
-* Fri Oct 03 2014 Sergey Lavrinenko <lavrinenko@yandex-team.ru>
+* Fri Oct 03 2014 Sergey Lavrinenko <s@lavr.me>
 - Initial rpm
