@@ -1,6 +1,6 @@
 # Pgcheck
 
-Tool for monitoring backend databases from PL\Proxy hosts and changing `plproxy.get_cluster_partitions` function output.
+Tool for monitoring backend databases from PL/Proxy hosts and changing `plproxy.get_cluster_partitions` function output.
 
 ## How does it work?
 
@@ -11,20 +11,20 @@ Pgcheck checks health status of each host of PostgreSQL clusters and assigns the
 * `30` - asynchronous replica in any other datacenter,
 * `100` - dead hosts.
 
-In our environment plproxy-host, when taking decision where to route the query, by default takes host with the lowest priority. So in general all queries go to the master. If it failes, the queries are routed to one of the replicas. This gives us read-only degradation in case of master fail.
+In our environment plproxy-host, when taking decision where to route the query, by default takes host with the lowest priority. So in general all queries go to the master. If it fails, the queries are routed to one of the replicas. This gives us read-only degradation in case of master fail.
 
 If you set `replics_weights = yes` in config-file, replics priorities would be calculated from 50 to 99 depending on its load. In that case for synchronous replics calculated priority would be reduced by 20, for asynchronous replics in the same datacenter - by 10. The load of the replica right now can be calculated in two simple ways depending on `load_calculation` parameter:
 * `load_calculation = pgbouncer` - will be calculated depending on pgbouncer client connections,
 * `load_calculation = postgres` - will be calculated depending on PostgreSQL client connections (all connections from pg_stat_activity, not only in `active` state).
 
-In our environment iformation about shards, hosts and their priorities is kept in special tables (you can see sqls for creating them in `samples/sql` directory). Pgcheck forks two processes on each cluster defined in config-file - one for getting current priorities of hosts and one for calculating the so-called base priorities.
+In our environment information about shards, hosts and their priorities is kept in special tables (you can see sqls for creating them in `samples/sql` directory). Pgcheck forks two processes on each cluster defined in config-file - one for getting current priorities of hosts and one for calculating the so-called base priorities.
 First loop is executed very fast (every second with timeout of one second for every operation), in order to lose as little queries as possible in case of problems with any host. It refreshes the value for field `priority` in the `priorities` table and assigns next values:
 * `0` if the host is master, not depending on the value of `base_prio`,
 * `100` if the host is dead, in any case,
 * `base_prio+prio_diff`, if the host is replica and alive.
 Because of network flaps frequent changes of priorities may occur, there are parameters `quorum` and `hysterisis` for every cluster. Details for them are below.
 
-The second loop is exceted once in `base_prio_timeout` seconds and it refreshes values of field `base_prio` in table `hosts`. Because this information does not change frequently this loop is executed less often and timeouts are not so aggressive. If for some host in this loop priority could not be calculated, none of the priorities would be changed.
+The second loop is executed once in `base_prio_timeout` seconds and it refreshes values of field `base_prio` in table `hosts`. Because this information does not change frequently this loop is executed less often and timeouts are not so aggressive. If for some host in this loop priority could not be calculated, none of the priorities would be changed.
 
 Also there is `prio_diff` field in table `hosts`, which is taken in account when assigning current priorities for replics. It may be needed for changing priority of any host by hand.
 
