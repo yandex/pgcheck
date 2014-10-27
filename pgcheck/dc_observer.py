@@ -125,4 +125,3 @@ class HardcodedDCObserver(AbstractDCObserver):
             return self.get_host_dc(self.myhostname)
         except ObserverError:
             return self.get_host_dc('my_dc')
-

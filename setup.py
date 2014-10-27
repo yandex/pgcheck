@@ -35,10 +35,10 @@ setup(
     platforms=["Linux", "BSD", "MacOS"],
     include_package_data=True,
     zip_safe=False,
-    packages = ['pgcheck', ],
+    packages=['pgcheck'],
     entry_points={
         'console_scripts': [
             'pgcheck = pgcheck.pgcheck:main',
-            ]},
+        ]},
     install_requires=open('requirements.txt', 'r').read(),
 )

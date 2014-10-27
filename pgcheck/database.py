@@ -37,7 +37,7 @@ class Database:
             cur = self.conn_local.cursor()
             cur.execute('select max(priority) from plproxy.priorities where host_id=%d;' % host_id)
             return cur.fetchone()[0]
-        except Exception as err:
+        except Exception:
             logging.error("Could not get current priority of host %d", host_id, exc_info=1)
             return 100
 
@@ -73,7 +73,7 @@ class Database:
             res = cur.fetchone()
             try:
                 self.check_host_status(res)
-            except TimeoutError as err:
+            except TimeoutError:
                 self.update_host_priority(host_id, 100, "Request timed out")
         cur.close()
 

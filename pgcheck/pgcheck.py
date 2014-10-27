@@ -66,7 +66,7 @@ def load_observer_from_config(config):
     if '.' not in dotted_path:
         dotted_path = '.' + dotted_path
 
-    module_name, cls_name = dotted_path.rsplit('.',1)
+    module_name, cls_name = dotted_path.rsplit('.', 1)
 
     if module_name:
         import importlib
@@ -186,4 +186,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

@@ -52,8 +52,3 @@ observer_filename = data-pgcheck-hosts.json
     config.set('global', 'observer_filename', os.path.join(THIS_DIR, config.get('global', 'observer_filename')))
     o = load_observer_from_config(config)
     assert o.get_host_dc('host1') == 'DC1'
-
-
-
-
-
