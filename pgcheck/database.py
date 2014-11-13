@@ -140,7 +140,7 @@ class Database:
         self.repl_append_string = self.config.get('global', 'repl_append_string')
         self.hosts = self.get_base_priorities()
         for host_name in self.hosts.keys():
-            self.calculate_base_priority(host_name)
+            self.get_base_priority(host_name)
         self.update_base_priorities()
 
     def get_base_priorities(self):
@@ -155,7 +155,7 @@ class Database:
         cur.close()
         return hosts
 
-    def calculate_base_priority(self, host_name):
+    def get_base_priority(self, host_name):
         try:
             conn = psycopg2.connect('%s %s' % (self.hosts[host_name]['conn_string'], self.repl_append_string))
             conn.autocommit = True
@@ -172,36 +172,39 @@ class Database:
                 replics_weights = self.config.get('global', 'replics_weights')
                 for i in replics_info:
                     replica_host_name = i[0]
-                    replica_state = i[1]
                     if replica_host_name is None or replica_host_name not in self.hosts.keys():
                         logging.warning(replics_info)
                         continue
-                    if replica_state == 'sync':
-                        if replics_weights != 'yes' and replics_weights != 'YES':
-                            self.hosts[replica_host_name]['base_prio'] = 10
-                        else:
-                            self.hosts[replica_host_name]['base_prio'] = self.get_priority_according_to_load(
-                                self.hosts[replica_host_name]['conn_string']) - 20
-                    else:
-                        if self.hosts[replica_host_name]['dc'] == self.my_dc:
-                            if replics_weights != 'yes' and replics_weights != 'YES':
-                                self.hosts[replica_host_name]['base_prio'] = 20
-                            else:
-                                self.hosts[replica_host_name]['base_prio'] = self.get_priority_according_to_load(
-                                    self.hosts[replica_host_name]['conn_string']) - 10
-                        else:
-                            if replics_weights != 'yes' and replics_weights != 'YES':
-                                self.hosts[replica_host_name]['base_prio'] = 30
-                            else:
-                                self.hosts[replica_host_name]['base_prio'] = self.get_priority_according_to_load(
-                                    self.hosts[replica_host_name]['conn_string'])
+                    self.hosts[replica_host_name]['base_prio'] = self.calculate_base_priority(i)
             cur.close()
         except psycopg2.OperationalError:
             pass
         except psycopg2.ProgrammingError:
             pass
 
-    def get_priority_according_to_load(self, conn_string):
+    def calculate_base_priority(self, replica_info):
+        try:
+            replica_host_name = replica_info[0]
+            replica_state = replica_info[1]
+
+            if replica_state == 'sync':
+                res = 10
+            else:
+                if self.hosts[replica_host_name]['dc'] == self.my_dc:
+                    res = 20
+                else:
+                    res = 30
+
+            replics_weights = self.config.get('global', 'replics_weights')
+            if replics_weights.lower() == 'yes':
+                res += self.get_priority_diff_according_to_load(self.hosts[replica_host_name]['conn_string'])
+
+            return res
+        except Exception as err:
+            logging.error(str(err), exc_info=1)
+
+
+    def get_priority_diff_according_to_load(self, conn_string):
         logging.debug("Going to count load for replic: %s", conn_string)
         load_calculation = self.config.get('global', 'load_calculation')
         if load_calculation == 'pgbouncer':
@@ -223,16 +226,17 @@ class Database:
             cur.execute("select count(*) from pg_stat_activity;")
             current = cur.fetchone()[0]
         else:
-            return 30
+            return 0
         cur.close()
         conn.close()
         logging.debug('%d/%d', current, max)
-        # should be from 50 to 100
-        new_priority = 50 + int(current * 100.0 / max / 2)
-        if 50 <= new_priority <= 100:
-            return new_priority
+        # should be from 0 to 50
+        if max != 0:
+            priority_diff = int(current * 100.0 / max / 2)
+        if 0 <= priority_diff <= 50:
+            return priority_diff
         else:
-            return 30
+            return 0
 
     def update_base_priorities(self):
         cur = self.conn_local.cursor()
