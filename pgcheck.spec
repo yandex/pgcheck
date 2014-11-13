@@ -4,8 +4,8 @@
 %define _rpmdir .
 
 Name: pgcheck
-Version: 1.0
-Release: 2%{?dist}
+Version: 1.1
+Release: 0%{?dist}
 
 Summary: Meta package for pgcheck
 License: Yandex License

@@ -165,8 +165,9 @@ class Database:
             if is_master:
                 self.hosts[host_name]['base_prio'] = 0
                 cur.execute(
-                    "select client_hostname, sync_state from pg_stat_replication "
-                    "where application_name != 'pg_basebackup';")
+                    "select client_hostname, sync_state, "
+                    "pg_xlog_location_diff(pg_current_xlog_location(), replay_location) as replay_delay "
+                    "from pg_stat_replication where application_name != 'pg_basebackup';")
                 replics_info = cur.fetchall()
                 logging.debug("replics_info: %s", replics_info)
                 replics_weights = self.config.get('global', 'replics_weights')
@@ -186,6 +187,7 @@ class Database:
         try:
             replica_host_name = replica_info[0]
             replica_state = replica_info[1]
+            replica_delay = replica_info[2]
 
             if replica_state == 'sync':
                 res = 10
@@ -197,8 +199,18 @@ class Database:
 
             replics_weights = self.config.get('global', 'replics_weights')
             if replics_weights.lower() == 'yes':
-                res += self.get_priority_diff_according_to_load(self.hosts[replica_host_name]['conn_string'])
+                append = self.get_priority_diff_according_to_load(self.hosts[replica_host_name]['conn_string'])
+                res += append
+                logging.debug("Priority of host %s has not been increased by %d while accounting replics load", replica_host_name, append)
 
+            account_replication_lag = self.config.get('global', 'account_replication_lag')
+            if account_replication_lag.lower() == 'yes':
+                append = self.get_priority_diff_according_to_lag(replica_delay)
+                res += append
+                logging.debug("Priority of host %s has not been increased by %d while accounting replication lag", replica_host_name, append)
+
+            if res > 100:
+                return 100
             return res
         except Exception as err:
             logging.error(str(err), exc_info=1)
@@ -237,6 +249,17 @@ class Database:
             return priority_diff
         else:
             return 0
+
+    def get_priority_diff_according_to_lag(self, delay):
+        # Right now it does not use any configuration parameters to understand
+        # which lag is supposed to be normal and which seems to be critical.
+        # It just increments priority by 1 for each megabyte of replication lag
+        # and stops on 80.
+        # May be in the future it would be changed.
+        res = int(delay / 1024 / 1024)
+        if res > 80:
+            res = 80
+        return res
 
     def update_base_priorities(self):
         cur = self.conn_local.cursor()

@@ -13,9 +13,11 @@ Pgcheck checks health status of each host of PostgreSQL clusters and assigns the
 
 In our environment plproxy-host, when taking decision where to route the query, by default takes host with the lowest priority. So in general all queries go to the master. If it fails, the queries are routed to one of the replicas. This gives us read-only degradation in case of master fail.
 
-If you set `replics_weights = yes` in config-file, replics priorities would be calculated from 50 to 99 depending on its load. In that case for synchronous replics calculated priority would be reduced by 20, for asynchronous replics in the same datacenter - by 10. The load of the replica right now can be calculated in two simple ways depending on `load_calculation` parameter:
+If you set `replics_weights = yes` in config-file, replics priorities diffs would be calculated depending on its load. The resulting priority is increase by this diff. The load of the replica right now can be calculated in two simple ways depending on `load_calculation` parameter:
 * `load_calculation = pgbouncer` - will be calculated depending on pgbouncer client connections,
 * `load_calculation = postgres` - will be calculated depending on PostgreSQL client connections (all connections from pg_stat_activity, not only in `active` state).
+
+If you set `account_replication_lag = yes`, replics priorities would be also increased by one for each megabyte of replication relay delay.
 
 In our environment information about shards, hosts and their priorities is kept in special tables (you can see sqls for creating them in `samples/sql` directory). Pgcheck forks two processes on each cluster defined in config-file - one for getting current priorities of hosts and one for calculating the so-called base priorities.
 First loop is executed very fast (every second with timeout of one second for every operation), in order to lose as little queries as possible in case of problems with any host. It refreshes the value for field `priority` in the `priorities` table and assigns next values:
@@ -36,7 +38,7 @@ The package will install all needed libraries and dependencies, but it will not 
 ## Short tutorial
 
 ```
-yum -y install yamail-pgcheck
+yum -y install pgcheck
 vim /etc/pgcheck.conf
 /etc/init.d/pgcheck start
 tail -f /var/log/pgcheck/pgcheck.log
