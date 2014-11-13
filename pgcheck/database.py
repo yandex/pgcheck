@@ -194,7 +194,9 @@ class Database:
                     if replica_host_name is None or replica_host_name not in self.hosts.keys():
                         logging.warning(replics_info)
                         continue
-                    self.hosts[replica_host_name]['base_prio'] = self.calculate_base_priority(i)
+                    tmp = self.calculate_base_priority(i)
+                    if tmp:
+                        self.hosts[replica_host_name]['base_prio'] = tmp
             cur.close()
         except psycopg2.OperationalError:
             pass
@@ -231,7 +233,8 @@ class Database:
                 return 100
             return res
         except Exception as err:
-            logging.error(str(err), exc_info=1)
+            logging.warning(str(err), exc_info=1)
+            return None
 
 
     def get_priority_diff_according_to_load(self, conn_string):
