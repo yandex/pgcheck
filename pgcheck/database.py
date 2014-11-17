@@ -221,16 +221,16 @@ class Database:
             if replics_weights.lower() == 'yes':
                 append = self.get_priority_diff_according_to_load(self.hosts[replica_host_name]['conn_string'])
                 res += append
-                logging.debug("Priority of host %s has not been increased by %d while accounting replics load", replica_host_name, append)
+                logging.debug("Priority of host %s has been increased by %d while accounting replics load", replica_host_name, append)
 
             account_replication_lag = self.config.get('global', 'account_replication_lag')
             if account_replication_lag.lower() == 'yes':
                 append = self.get_priority_diff_according_to_lag(replica_delay)
                 res += append
-                logging.debug("Priority of host %s has not been increased by %d while accounting replication lag", replica_host_name, append)
+                logging.debug("Priority of host %s has been increased by %d while accounting replication lag", replica_host_name, append)
 
-            if res > 100:
-                return 100
+            if res >= 100:
+                return 99
             return res
         except Exception as err:
             logging.warning(str(err), exc_info=1)
