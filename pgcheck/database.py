@@ -129,7 +129,7 @@ class Database:
         host, base_prio, prio_diff = cur.fetchone()
 
         if priority != 0 and priority != 100:
-            if base_prio is not None and 0 < base_prio < 100:
+            if base_prio is not None and base_prio > 0:
                 priority = base_prio
             if prio_diff is not None:
                 priority += prio_diff
@@ -168,7 +168,7 @@ class Database:
                     """where h.host_id=p.host_id and c.conn_id=p.conn_id;""")
         hosts = {}
         for res in cur.fetchall():
-            hosts[res[1]] = {'host_id': res[0], 'dc': res[2], 'base_prio': res[3], 'conn_string': res[4]}
+            hosts[res[1]] = {'host_id': res[0], 'dc': res[2], 'base_prio': res[3], 'conn_string': res[4], 'updated': False}
         logging.debug("get_base_priorities: %s", hosts)
         cur.close()
         return hosts
@@ -188,7 +188,7 @@ class Database:
                     "from pg_stat_replication where application_name != 'pg_basebackup';")
                 replics_info = cur.fetchall()
                 logging.debug("replics_info: %s", replics_info)
-                replics_weights = self.config.get('global', 'replics_weights')
+
                 for i in replics_info:
                     replica_host_name = i[0]
                     if replica_host_name is None or replica_host_name not in self.hosts.keys():
@@ -227,10 +227,11 @@ class Database:
             if account_replication_lag.lower() == 'yes':
                 append = self.get_priority_diff_according_to_lag(replica_delay)
                 res += append
+                self.hosts[replica_host_name]['updated'] = True
                 logging.debug("Priority of host %s has been increased by %d while accounting replication lag", replica_host_name, append)
 
             if res >= 100:
-                return 99
+                return 110
             return res
         except Exception as err:
             logging.warning(str(err), exc_info=1)
@@ -283,10 +284,19 @@ class Database:
         return res
 
     def update_base_priorities(self):
+        account_replication_lag = self.config.get('global', 'account_replication_lag').lower()
         cur = self.conn_local.cursor()
         for k, v in self.hosts.items():
             # k = 'pgtest01e.domain.com'
-            # v = {'host_id': 2, 'conn_string': ..., 'dc': 'IVA', 'base_prio': 0}
+            # v = {'host_id': 2, 'conn_string': ..., 'dc': 'IVA', 'base_prio': 0, 'updated': False}
+
+            if account_replication_lag == 'yes':
+                if v['base_prio'] != 0 and not v['updated']:
+                    # It means that this host has not been found in pg_stat_replication view on master.
+                    # So we think that it is really far behind from master and we shoud 
+                    # give him really high priority.
+                    v['base_prio'] = 120
+
             cur.execute("select base_prio from plproxy.hosts where host_id=%d;" % v['host_id'])
             current_base_prio = cur.fetchone()[0]
             if current_base_prio != v['base_prio']:
