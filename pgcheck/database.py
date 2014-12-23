@@ -19,6 +19,7 @@
 
 import logging
 import sys
+import re
 
 import psycopg2
 
@@ -197,6 +198,22 @@ class Database:
                     tmp = self.calculate_base_priority(i)
                     if tmp:
                         self.hosts[replica_host_name]['base_prio'] = tmp
+            else:
+                cur.execute("select setting from pg_settings where name = 'data_directory';")
+                data_dir = cur.fetchone()[0]
+
+                cur.execute("select pg_read_file('%s/recovery.conf');" % data_dir)
+                for i in cur.fetchone()[0].splitlines():
+                    if 'primary_conninfo' in i:
+                        master = re.search('host=([\w\-\._]*)', i).group(0).split('=')[-1]
+                if master:
+                    cur_local = self.conn_local.cursor()
+                    cur_local.execute("select priority from plproxy.hosts h,\
+                            plproxy.priorities p where h.host_id = p.host_id\
+                            and h.host_name = '%s';" % master)
+                    res = cur_local.fetchone()[0]
+                    if res != 0:
+                        self.hosts[host_name]['updated'] = True
             cur.close()
         except psycopg2.OperationalError:
             pass
@@ -275,10 +292,10 @@ class Database:
     def get_priority_diff_according_to_lag(self, delay):
         # Right now it does not use any configuration parameters to understand
         # which lag is supposed to be normal and which seems to be critical.
-        # It just increments priority by 1 for each megabyte of replication lag
-        # and stops on 80.
+        # It just increments priority by 1 for each 10 megabytes of replication lag
+        # and stops on priority 80.
         # May be in the future it would be changed.
-        res = int(delay / 1024 / 1024)
+        res = int(delay / 1024 / 1024 / 10)
         if res > 80:
             res = 80
         return res
@@ -293,7 +310,7 @@ class Database:
             if account_replication_lag == 'yes':
                 if v['base_prio'] != 0 and not v['updated']:
                     # It means that this host has not been found in pg_stat_replication view on master.
-                    # So we think that it is really far behind from master and we shoud 
+                    # So we think that it is really far behind from master and we shoud
                     # give him really high priority.
                     v['base_prio'] = 120
 
