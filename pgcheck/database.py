@@ -51,9 +51,20 @@ class Database:
             logging.error('Could not connect to "%s". Exiting', self.local_conn_string)
             sys.exit(1)
 
-    def get_current_priority_of_host(self, host_id):
+    def create_local_cursor(self):
         try:
             cur = self.conn_local.cursor()
+            cur.execute('select 42;')
+            return cur
+        except Exception:
+            logging.warning("Could not create cursor to local DB. Re-opening a new connection.")
+            self.conn_local = psycopg2.connect(self.local_conn_string)
+            self.conn_local.autocommit = True
+            self.create_local_cursor()
+
+    def get_current_priority_of_host(self, host_id):
+        try:
+            cur = self.create_local_cursor()
             cur.execute('select max(priority) from plproxy.priorities where host_id=%d;' % host_id)
             return cur.fetchone()[0]
         except Exception:
@@ -62,7 +73,7 @@ class Database:
 
     def get_all_hosts(self):
         try:
-            cur = self.conn_local.cursor()
+            cur = self.create_local_cursor()
             cur.execute('select distinct(host_id) from plproxy.hosts;')
             for i in cur.fetchall():
                 self.host_ids.append(i[0])
@@ -73,7 +84,7 @@ class Database:
     def set_all_dcs(self):
         logging.debug("Started updating information about DC for hosts of %s", self.dbname)
         try:
-            cur = self.conn_local.cursor()
+            cur = self.create_local_cursor()
             for host_id in self.host_ids:
                 cur.execute("select host_name from plproxy.hosts where host_id=%d;" % host_id)
                 dc = self.get_host_dc_func(cur.fetchone()[0])
@@ -84,7 +95,7 @@ class Database:
             logging.error(str(err), exc_info=1)
 
     def check_hosts_for_db(self):
-        cur = self.conn_local.cursor()
+        cur = self.create_local_cursor()
         for host_id in self.host_ids:
             cur.execute("""select h.host_id, c.conn_string, p.priority
                 from plproxy.priorities p, plproxy.connections c, plproxy.hosts h
@@ -125,7 +136,7 @@ class Database:
         conn.close()
 
     def update_host_priority(self, host_id, priority, comment):
-        cur = self.conn_local.cursor()
+        cur = self.create_local_cursor()
         cur.execute("select host_name, base_prio, prio_diff from plproxy.hosts where host_id=%d;" % host_id)
         host, base_prio, prio_diff = cur.fetchone()
 
@@ -163,7 +174,7 @@ class Database:
         self.update_base_priorities()
 
     def get_base_priorities(self):
-        cur = self.conn_local.cursor()
+        cur = self.create_local_cursor()
         cur.execute("""select h.host_id, h.host_name, h.dc, h.base_prio, c.conn_string """
                     """from plproxy.connections c, plproxy.hosts h, plproxy.priorities p """
                     """where h.host_id=p.host_id and c.conn_id=p.conn_id;""")
@@ -207,7 +218,7 @@ class Database:
                     if 'primary_conninfo' in i:
                         master = re.search('host=([\w\-\._]*)', i).group(0).split('=')[-1]
                 if master:
-                    cur_local = self.conn_local.cursor()
+                    cur_local = self.create_local_cursor()
                     cur_local.execute("select priority from plproxy.hosts h,\
                             plproxy.priorities p where h.host_id = p.host_id\
                             and h.host_name = '%s';" % master)
@@ -302,7 +313,7 @@ class Database:
 
     def update_base_priorities(self):
         account_replication_lag = self.config.get('global', 'account_replication_lag').lower()
-        cur = self.conn_local.cursor()
+        cur = self.create_local_cursor()
         for k, v in self.hosts.items():
             # k = 'pgtest01e.domain.com'
             # v = {'host_id': 2, 'conn_string': ..., 'dc': 'IVA', 'base_prio': 0, 'updated': False}
