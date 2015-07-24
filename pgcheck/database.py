@@ -19,7 +19,6 @@
 
 import logging
 import sys
-import re
 
 import psycopg2
 
@@ -194,37 +193,14 @@ class Database:
             is_master = cur.fetchone()[0]
             if is_master:
                 self.hosts[host_name]['base_prio'] = 0
-                cur.execute(
-                    "select client_hostname, sync_state, "
-                    "pg_xlog_location_diff(pg_current_xlog_location(), replay_location) as replay_delay "
-                    "from pg_stat_replication where application_name != 'pg_basebackup';")
-                replics_info = cur.fetchall()
-                logging.debug("replics_info: %s", replics_info)
-
-                for i in replics_info:
-                    replica_host_name = i[0]
-                    if replica_host_name is None or replica_host_name not in self.hosts.keys():
-                        logging.warning(replics_info)
-                        continue
-                    tmp = self.calculate_base_priority(i)
-                    if tmp:
-                        self.hosts[replica_host_name]['base_prio'] = tmp
             else:
-                cur.execute("select setting from pg_settings where name = 'data_directory';")
-                data_dir = cur.fetchone()[0]
-
-                cur.execute("select pg_read_file('%s/recovery.conf');" % data_dir)
-                for i in cur.fetchone()[0].splitlines():
-                    if 'primary_conninfo' in i:
-                        master = re.search('host=([\w\-\._]*)', i).group(0).split('=')[-1]
-                if master:
-                    cur_local = self.create_local_cursor()
-                    cur_local.execute("select priority from plproxy.hosts h,\
-                            plproxy.priorities p where h.host_id = p.host_id\
-                            and h.host_name = '%s';" % master)
-                    res = cur_local.fetchone()[0]
-                    if res != 0:
-                        self.hosts[host_name]['updated'] = True
+                cur.execute(
+                    "select extract(epoch from (current_timestamp - ts)) as " +
+                    "replication_lag from repl_mon;")
+                delta = cur.fetchone()[0]
+                tmp = self.calculate_base_priority((host_name, delta))
+                if tmp:
+                    self.hosts[host_name]['base_prio'] = tmp
             cur.close()
         except psycopg2.OperationalError:
             pass
@@ -234,16 +210,12 @@ class Database:
     def calculate_base_priority(self, replica_info):
         try:
             replica_host_name = replica_info[0]
-            replica_state = replica_info[1]
-            replica_delay = replica_info[2]
+            replica_delay = replica_info[1]
 
-            if replica_state == 'sync':
-                res = 10
+            if self.hosts[replica_host_name]['dc'] == self.my_dc:
+                res = 20
             else:
-                if self.hosts[replica_host_name]['dc'] == self.my_dc:
-                    res = 20
-                else:
-                    res = 30
+                res = 30
 
             replics_weights = self.config.get('global', 'replics_weights')
             if replics_weights.lower() == 'yes':
@@ -264,7 +236,6 @@ class Database:
         except Exception as err:
             logging.warning(str(err), exc_info=1)
             return None
-
 
     def get_priority_diff_according_to_load(self, conn_string):
         logging.debug("Going to count load for replic: %s", conn_string)
@@ -301,29 +272,18 @@ class Database:
             return 0
 
     def get_priority_diff_according_to_lag(self, delay):
-        # Right now it does not use any configuration parameters to understand
-        # which lag is supposed to be normal and which seems to be critical.
-        # It just increments priority by 1 for each 10 megabytes of replication lag
-        # and stops on priority 80.
-        # May be in the future it would be changed.
-        res = int(delay / 1024 / 1024 / 10)
+        # This is direct mapping of lag seconds to priority.
+        # Max priority 80.
+        res = int(round(delay))
         if res > 80:
             res = 80
         return res
 
     def update_base_priorities(self):
-        account_replication_lag = self.config.get('global', 'account_replication_lag').lower()
         cur = self.create_local_cursor()
         for k, v in self.hosts.items():
             # k = 'pgtest01e.domain.com'
             # v = {'host_id': 2, 'conn_string': ..., 'dc': 'IVA', 'base_prio': 0, 'updated': False}
-
-            if account_replication_lag == 'yes':
-                if v['base_prio'] != 0 and not v['updated']:
-                    # It means that this host has not been found in pg_stat_replication view on master.
-                    # So we think that it is really far behind from master and we shoud
-                    # give him really high priority.
-                    v['base_prio'] = 120
 
             cur.execute("select base_prio from plproxy.hosts where host_id=%d;" % v['host_id'])
             current_base_prio = cur.fetchone()[0]
