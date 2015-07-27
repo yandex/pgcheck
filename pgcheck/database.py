@@ -19,6 +19,7 @@
 
 import logging
 import sys
+import re
 
 import psycopg2
 
@@ -194,6 +195,14 @@ class Database:
             if is_master:
                 self.hosts[host_name]['base_prio'] = 0
             else:
+                conn = psycopg2.connect('%s %s' % (
+                    re.sub('dbname=\w+',
+                           'dbname=postgres',
+                           self.hosts[host_name]['conn_string']),
+                    self.repl_append_string
+                    ))
+                conn.autocommit = True
+                cur = conn.cursor()
                 cur.execute(
                     "select extract(epoch from (current_timestamp - ts)) as " +
                     "replication_lag from repl_mon;")
