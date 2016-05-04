@@ -205,7 +205,7 @@ class Database:
                 cur = conn.cursor()
                 cur.execute(
                     "select extract(epoch from (current_timestamp - ts)) as " +
-                    "replication_lag from repl_mon;")
+                    "replication_lag from public.repl_mon;")
                 delta = cur.fetchone()[0]
                 tmp = self.calculate_base_priority((host_name, delta))
                 if tmp:
