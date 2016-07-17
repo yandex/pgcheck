@@ -17,7 +17,7 @@ If you set `replics_weights = yes` in config-file, replics priorities diffs woul
 * `load_calculation = pgbouncer` - will be calculated depending on pgbouncer client connections,
 * `load_calculation = postgres` - will be calculated depending on PostgreSQL client connections (all connections from pg_stat_activity, not only in `active` state).
 
-If you set `account_replication_lag = yes`, replics priorities would be also increased by one for each megabyte of replication relay delay.
+If you set `account_replication_lag = yes`, replics priorities would be also increased by one for each second of replication replay delay. Replication delay in seconds is measured with [repl_mon](https://github.com/dev1ant/repl_mon).
 
 In our environment information about shards, hosts and their priorities is kept in special tables (you can see sqls for creating them in `samples/sql` directory). Pgcheck forks two processes on each cluster defined in config-file - one for getting current priorities of hosts and one for calculating the so-called base priorities.
 First loop is executed very fast (every second with timeout of one second for every operation), in order to lose as little queries as possible in case of problems with any host. It refreshes the value for field `priority` in the `priorities` table and assigns next values:

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 #
-#    Copyright (c) 2014 Yandex <https://github.com/yandex>
-#    Copyright (c) 2014 Other contributors as noted in the AUTHORS file.
+#    Copyright (c) 2014-2016 Yandex <https://github.com/yandex>
+#    Copyright (c) 2014-2016 Other contributors as noted in the AUTHORS file.
 #
 #    This is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU Lesser General Public License as published by
@@ -23,7 +23,7 @@ from setuptools import setup
 
 setup(
     name='pgcheck',
-    version='0.1',
+    version='1.1',
     author='Vladimir Borodin',
     author_email='root@simply.name',
     maintainer='Sergey Lavrinenko',
