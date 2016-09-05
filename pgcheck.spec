@@ -5,7 +5,7 @@
 
 Name: pgcheck
 Version: 1.1
-Release: 8%{?dist}
+Release: 9%{?dist}
 
 Summary: Meta package for pgcheck
 License: Yandex License
