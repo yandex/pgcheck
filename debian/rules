@@ -1,0 +1,9 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# FIXME: debian/links is an ugly way to simulate python-support
+
+%:
+	dh $@
+
+override_dh_usrlocal:

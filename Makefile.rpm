@@ -1,0 +1,13 @@
+.PHONY: clean rpm all
+
+rpm: clean
+	rpmbuild \
+		--define "_topdir `pwd`" \
+		--define "_defined_release `git rev-parse --short HEAD`" \
+		--define "_defined_version `git rev-list HEAD --count`" \
+		-bb pgcheck.spec
+
+clean:
+	rm -rf BUILD BUILDROOT RPMS SOURCES SPECS SRPMS noarch
+
+all: rpm

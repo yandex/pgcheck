@@ -1,5 +1,7 @@
-rpm:
-	find . -name "*.pyc" -exec rm -rf {} \;
-	find . -name "*.pyo" -exec rm -rf {} \;
-	rm -rf noarch
-	rpmbuild -bb pgcheck.spec
+.PHONY: clean all
+
+clean:
+	rm -rf ../pgcheck_*.build ../pgcheck_*.changes ../pgcheck_*.deb
+
+install:
+	python setup.py install --root=$(DESTDIR) -O1

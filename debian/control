@@ -1,0 +1,13 @@
+Source: pgcheck
+Section: unknown
+Priority: optional
+Maintainer: Vladimir Borodin <d0uble@yandex-team.ru>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Homepage: https://github.com/yandex/pgcheck
+#Vcs-Git: git://github.com:yandex/pgcheck.git
+
+Package: pgcheck
+Architecture: any
+Depends: ${misc:Depends}, ${python:Depends}, python-psycopg2, python-daemon, python-lockfile, python-requests
+Description: Tool for changing PL/Proxy hosts behaviour.
