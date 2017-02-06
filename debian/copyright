@@ -3,7 +3,7 @@ Upstream-Name: pgcheck
 Source: <https://github.com/yandex/pgcheck>
 
 Files: *
-Copyright: 2014-2016 Vladimir Borodin <d0uble@yandex-team.ru>
+Copyright: 2014-2017 Vladimir Borodin <d0uble@yandex-team.ru>
 License: LGPL-3
 
 License: LGPL-3
