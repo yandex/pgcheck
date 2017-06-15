@@ -104,6 +104,8 @@ class Database:
                 self.check_host_status(res)
             except TimeoutError:
                 self.update_host_priority(host_id, 100, "Request timed out")
+            except Exception as e:
+                self.update_host_priority(host_id, 100, e)
         cur.close()
 
     @timelimit(1.5)
@@ -121,8 +123,8 @@ class Database:
             cur = conn.cursor()
             cur.execute("select public.is_master(1000);")
             is_master = cur.fetchone()[0]
-        except psycopg2.ProgrammingError:
-            self.update_host_priority(host_id, 100, "Could not check health of host [Probably, no function public.is_master(1000);]")
+        except psycopg2.Error:
+            self.update_host_priority(host_id, 100, "Could not check health of host")
             return 0
 
         if is_master:
@@ -202,10 +204,8 @@ class Database:
                 if tmp:
                     self.hosts[host_name]['base_prio'] = tmp
             cur.close()
-        except psycopg2.OperationalError:
-            pass
-        except psycopg2.ProgrammingError:
-            pass
+        except psycopg2.Error as e:
+            logging.warning('Failed to get base prio of host %s: %s' % (host_name, e))
 
     def calculate_base_priority(self, replica_info):
         try:
