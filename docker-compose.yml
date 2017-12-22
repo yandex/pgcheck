@@ -1,0 +1,101 @@
+version: '2.2'
+
+services:
+  shard01-dc1:
+    image: pgcheck-postgres
+    hostname: shard01-dc1
+    domainname: pgcheck.net
+    init: true
+    extra_hosts:
+     - "shard01-dc2.pgcheck.net:192.168.233.11"
+     - "shard01-dc3.pgcheck.net:192.168.233.12"
+    networks:
+      net:
+        ipv4_address: 192.168.233.10
+  shard01-dc2:
+    image: pgcheck-postgres
+    command: [ "replica", "shard01-dc1.pgcheck.net" ]
+    hostname: shard01-dc2
+    domainname: pgcheck.net
+    init: true
+    extra_hosts:
+     - "shard01-dc1.pgcheck.net:192.168.233.10"
+     - "shard01-dc3.pgcheck.net:192.168.233.12"
+    networks:
+      net:
+        ipv4_address: 192.168.233.11
+  shard01-dc3:
+    image: pgcheck-postgres
+    command: [ "replica", "shard01-dc1.pgcheck.net" ]
+    hostname: shard01-dc3
+    domainname: pgcheck.net
+    init: true
+    extra_hosts:
+      - "shard01-dc1.pgcheck.net:192.168.233.10"
+      - "shard01-dc2.pgcheck.net:192.168.233.11"
+    networks:
+      net:
+        ipv4_address: 192.168.233.12
+
+  shard02-dc1:
+    image: pgcheck-postgres
+    command: [ "replica", "shard02-dc2.pgcheck.net" ]
+    hostname: shard02-dc1
+    domainname: pgcheck.net
+    init: true
+    extra_hosts:
+     - "shard02-dc2.pgcheck.net:192.168.233.14"
+     - "shard02-dc3.pgcheck.net:192.168.233.15"
+    networks:
+      net:
+        ipv4_address: 192.168.233.13
+  shard02-dc2:
+    image: pgcheck-postgres
+    hostname: shard02-dc2
+    domainname: pgcheck.net
+    init: true
+    extra_hosts:
+     - "shard02-dc1.pgcheck.net:192.168.233.13"
+     - "shard02-dc3.pgcheck.net:192.168.233.15"
+    networks:
+      net:
+        ipv4_address: 192.168.233.14
+  shard02-dc3:
+    image: pgcheck-postgres
+    command: [ "replica", "shard02-dc2.pgcheck.net" ]
+    hostname: shard02-dc3
+    domainname: pgcheck.net
+    init: true
+    extra_hosts:
+     - "shard02-dc1.pgcheck.net:192.168.233.13"
+     - "shard02-dc2.pgcheck.net:192.168.233.14"
+    networks:
+      net:
+        ipv4_address: 192.168.233.15
+
+  plproxy:
+    image: pgcheck-plproxy
+    volumes:
+        - ./:/tmp/
+    hostname: plproxy
+    domainname: pgcheck.net
+    init: true
+    extra_hosts:
+     - "shard01-dc1.pgcheck.net:192.168.233.10"
+     - "shard01-dc2.pgcheck.net:192.168.233.11"
+     - "shard01-dc3.pgcheck.net:192.168.233.12"
+     - "shard02-dc1.pgcheck.net:192.168.233.13"
+     - "shard02-dc2.pgcheck.net:192.168.233.14"
+     - "shard02-dc3.pgcheck.net:192.168.233.15"
+    networks:
+      net:
+        ipv4_address: 192.168.233.16
+
+networks:
+  net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+       - subnet: 192.168.233.0/24
+         gateway: 192.168.233.1
