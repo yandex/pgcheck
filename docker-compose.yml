@@ -3,6 +3,8 @@ version: '2.2'
 services:
   shard01-dc1:
     image: pgcheck-postgres
+    ports:
+        - "6432"
     hostname: shard01-dc1
     domainname: pgcheck.net
     init: true
@@ -14,6 +16,8 @@ services:
         ipv4_address: 192.168.233.10
   shard01-dc2:
     image: pgcheck-postgres
+    ports:
+        - "6432"
     command: [ "replica", "shard01-dc1.pgcheck.net" ]
     hostname: shard01-dc2
     domainname: pgcheck.net
@@ -26,6 +30,8 @@ services:
         ipv4_address: 192.168.233.11
   shard01-dc3:
     image: pgcheck-postgres
+    ports:
+        - "6432"
     command: [ "replica", "shard01-dc1.pgcheck.net" ]
     hostname: shard01-dc3
     domainname: pgcheck.net
@@ -39,6 +45,8 @@ services:
 
   shard02-dc1:
     image: pgcheck-postgres
+    ports:
+        - "6432"
     command: [ "replica", "shard02-dc2.pgcheck.net" ]
     hostname: shard02-dc1
     domainname: pgcheck.net
@@ -51,6 +59,8 @@ services:
         ipv4_address: 192.168.233.13
   shard02-dc2:
     image: pgcheck-postgres
+    ports:
+        - "6432"
     hostname: shard02-dc2
     domainname: pgcheck.net
     init: true
@@ -62,6 +72,8 @@ services:
         ipv4_address: 192.168.233.14
   shard02-dc3:
     image: pgcheck-postgres
+    ports:
+        - "6432"
     command: [ "replica", "shard02-dc2.pgcheck.net" ]
     hostname: shard02-dc3
     domainname: pgcheck.net
@@ -77,6 +89,8 @@ services:
     image: pgcheck-plproxy
     volumes:
         - ./:/tmp/
+    ports:
+        - "6432"
     hostname: plproxy
     domainname: pgcheck.net
     init: true

@@ -1,0 +1,3 @@
+psycopg2
+docker
+git+https://github.com/behave/behave
