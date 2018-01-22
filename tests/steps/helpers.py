@@ -3,9 +3,10 @@
 
 import logging
 import time
-import docker
 
-DOCKER = docker.from_env()
+import database
+import moby
+
 LOG = logging.getLogger('helpers')
 
 
@@ -55,19 +56,6 @@ def assert_results_are_equal(expected_table, result):
             "{}, expected {}, got {}".format(i, expected, actual)
 
 
-def get_container_by_name(name):
-    for container in DOCKER.containers.list():
-        if container.attrs['Config']['Hostname'] == name:
-            return container
-
-
-def get_container_tcp_port(container, port):
-    binding = container.attrs['NetworkSettings']['Ports'].get(
-        '{port}/tcp'.format(port=port))
-    if binding:
-        return binding[0]['HostPort']
-
-
 def container_action(container, action):
     if action == 'start':
         container.start()
@@ -79,3 +67,17 @@ def container_action(container, action):
         container.unpause()
     else:
         raise RuntimeError('Unsupported action')
+
+
+def container_sql(container, statement):
+    port = moby.get_container_tcp_port(
+        moby.get_container_by_name(container), 6432)
+    conn_string = "host=localhost port={port} dbname=db1 user=postgres " + \
+                  "connect_timeout=1"
+    conn_string = conn_string.format(host=container, port=port)
+
+    conn = database.Connection(conn_string)
+    res = conn.get(statement)
+    if res.errcode:
+        log.info(res)
+        raise RuntimeError('Could not execute statement')

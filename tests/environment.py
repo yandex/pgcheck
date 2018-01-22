@@ -5,7 +5,7 @@ import os
 import yaml
 import docker
 
-import steps.helpers as helpers
+from steps import moby
 
 
 def before_all(context):
@@ -20,8 +20,8 @@ def before_all(context):
         name = ''.join(container.name.split('_')[1:-1])
         context.containers[name] = container
 
-    context.plproxy_port = helpers.get_container_tcp_port(
-        helpers.get_container_by_name('plproxy'), 6432)
+    context.plproxy_port = moby.get_container_tcp_port(
+        moby.get_container_by_name('plproxy'), 6432)
 
 
 def after_step(context, step):

@@ -13,6 +13,9 @@ docker-env:
 	docker-compose up -d
 
 check:
+	behave --show-timings --stop --tags=-long @tests/pgcheck.featureset
+
+check-world:
 	behave --show-timings --stop @tests/pgcheck.featureset
 
 docker: docker-clean docker-build docker-env

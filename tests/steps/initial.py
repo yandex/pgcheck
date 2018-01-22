@@ -5,6 +5,7 @@ import logging
 import time
 
 import database
+import moby
 import helpers
 
 log = logging.getLogger(__name__)
@@ -51,6 +52,12 @@ def then_connection_strings_become(context, timeout, cluster):
 
 @when(u'we {action} "{container_name}" container')
 def when_action_container(context, action, container_name):
-    log.info(context.containers)
     container = context.containers[container_name]
     helpers.container_action(container, action)
+
+
+@when(u'we {action} replay on "{container_name}"')
+def when_action_replay(context, action, container_name):
+    container = context.containers[container_name]
+    statement = 'SELECT pg_wal_replay_{}()'.format(action)
+    helpers.container_sql(container_name, statement)
