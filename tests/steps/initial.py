@@ -41,3 +41,16 @@ def then_connection_strings_are(context, cluster):
         'plproxy.get_cluster_partitions', i_cluster_name=cluster)
     log.info(context.table.rows)
     helpers.assert_results_are_equal(context.table, res)
+
+
+@then(u'within {timeout:d} seconds connection strings for "{cluster}" cluster changes to')
+@helpers.retry_on_assert
+def then_connection_strings_become(context, timeout, cluster):
+    then_connection_strings_are(context, cluster)
+
+
+@when(u'we {action} "{container_name}" container')
+def when_action_container(context, action, container_name):
+    log.info(context.containers)
+    container = context.containers[container_name]
+    helpers.container_action(container, action)

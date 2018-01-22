@@ -2,10 +2,33 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import time
 import docker
 
 DOCKER = docker.from_env()
 LOG = logging.getLogger('helpers')
+
+
+def retry_on_assert(function):
+    """
+    Decorator for retrying. It catches AssertionError
+    while timeout not exceeded.
+    """
+
+    def wrapper(*args, **kwargs):
+        timeout = kwargs['timeout']
+        max_time = time.time() + timeout
+        while True:
+            try:
+                return function(*args, **kwargs)
+            except AssertionError as error:
+                LOG.info('%s call asserted: %s', function.__name__, error)
+                # raise exception if timeout exceeded
+                if time.time() > max_time:
+                    raise
+                time.sleep(1)
+
+    return wrapper
 
 
 def assert_results_are_equal(expected_table, result):
@@ -43,3 +66,16 @@ def get_container_tcp_port(container, port):
         '{port}/tcp'.format(port=port))
     if binding:
         return binding[0]['HostPort']
+
+
+def container_action(container, action):
+    if action == 'start':
+        container.start()
+    elif action == 'stop':
+        container.stop()
+    elif action == 'pause':
+        container.pause()
+    elif action == 'unpause':
+        container.unpause()
+    else:
+        raise RuntimeError('Unsupported action')
