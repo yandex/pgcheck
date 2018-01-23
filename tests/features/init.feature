@@ -11,6 +11,7 @@ Feature: Infrastructure works correctly
             | host=shard01-dc2.pgcheck.net port=6432 dbname=db1 |
             | host=shard02-dc1.pgcheck.net port=6432 dbname=db1 |
 
+
     Scenario: Dead host is handled correctly
         Given a deployed cluster
          When we pause "shard01-dc1" container
@@ -37,6 +38,7 @@ Feature: Infrastructure works correctly
             | host=shard01-dc2.pgcheck.net port=6432 dbname=db1 |
             | host=shard02-dc1.pgcheck.net port=6432 dbname=db1 |
 
+
     Scenario: Delayed replica is handled correctly
         Given a deployed cluster
          When we pause replay on "shard02-dc1"
@@ -51,6 +53,7 @@ Feature: Infrastructure works correctly
             | host=shard01-dc2.pgcheck.net port=6432 dbname=db1 |
             | host=shard02-dc1.pgcheck.net port=6432 dbname=db1 |
 
+
     @long
     Scenario: All delayed replics are handled correctly
         Given a deployed cluster
@@ -64,6 +67,21 @@ Feature: Infrastructure works correctly
          When we resume replay on "shard02-dc1"
           And we resume replay on "shard02-dc3"
           Then within 10 seconds connection strings for "ro" cluster changes to:
+            | get_cluster_partitions                            |
+            | host=shard01-dc2.pgcheck.net port=6432 dbname=db1 |
+            | host=shard02-dc1.pgcheck.net port=6432 dbname=db1 |
+
+
+    Scenario: Overloaded host is handled correctly
+        Given a deployed cluster
+         When we open a lot of connections to "shard02-dc1"
+         Then within 10 seconds connection strings for "ro" cluster changes to:
+            | get_cluster_partitions                            |
+            | host=shard01-dc2.pgcheck.net port=6432 dbname=db1 |
+            | host=shard02-dc3.pgcheck.net port=6432 dbname=db1 |
+
+         When we close a lot of connections to "shard02-dc1"
+         Then within 10 seconds connection strings for "ro" cluster changes to:
             | get_cluster_partitions                            |
             | host=shard01-dc2.pgcheck.net port=6432 dbname=db1 |
             | host=shard02-dc1.pgcheck.net port=6432 dbname=db1 |

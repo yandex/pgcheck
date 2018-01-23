@@ -59,5 +59,30 @@ def when_action_container(context, action, container_name):
 @when(u'we {action} replay on "{container_name}"')
 def when_action_replay(context, action, container_name):
     container = context.containers[container_name]
-    statement = 'SELECT pg_wal_replay_{}()'.format(action)
-    helpers.container_sql(container_name, statement)
+    conn_string = helpers.container_conn_string(container_name)
+    statement = 'SELECT pg_wal_replay_{action}()'.format(action=action)
+
+    conn = database.Connection(conn_string)
+    res = conn.get(statement)
+    if res.errcode:
+        log.info(res)
+        raise RuntimeError('Could not execute statement')
+
+
+@when(u'we {action} a lot of connections to "{container_name}"')
+def when_action_connections(context, action, container_name):
+
+    def execute_pg_sleep(conn_string):
+        db = database.Connection(conn_string)
+        res = db.get('SELECT now(), pg_sleep(60)')
+        log.info(res)
+
+    conn_string = helpers.container_conn_string(container_name, port=5432)
+
+    if action == 'open':
+        helpers.run_threads(50, execute_pg_sleep, conn_string=conn_string)
+    elif action == 'close':
+        db = database.Connection(conn_string)
+        res = db.get("""SELECT pg_terminate_backend(pid) FROM pg_stat_activity
+                        WHERE query ~ 'pg_sleep' AND pid != pg_backend_pid()""")
+        log.info(res)

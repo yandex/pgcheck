@@ -4,6 +4,7 @@ services:
   shard01-dc1:
     image: pgcheck-postgres
     ports:
+        - "5432"
         - "6432"
     hostname: shard01-dc1
     domainname: pgcheck.net
@@ -17,6 +18,7 @@ services:
   shard01-dc2:
     image: pgcheck-postgres
     ports:
+        - "5432"
         - "6432"
     command: [ "replica", "shard01-dc1.pgcheck.net" ]
     hostname: shard01-dc2
@@ -31,6 +33,7 @@ services:
   shard01-dc3:
     image: pgcheck-postgres
     ports:
+        - "5432"
         - "6432"
     command: [ "replica", "shard01-dc1.pgcheck.net" ]
     hostname: shard01-dc3
@@ -46,6 +49,7 @@ services:
   shard02-dc1:
     image: pgcheck-postgres
     ports:
+        - "5432"
         - "6432"
     command: [ "replica", "shard02-dc2.pgcheck.net" ]
     hostname: shard02-dc1
@@ -60,6 +64,7 @@ services:
   shard02-dc2:
     image: pgcheck-postgres
     ports:
+        - "5432"
         - "6432"
     hostname: shard02-dc2
     domainname: pgcheck.net
@@ -73,6 +78,7 @@ services:
   shard02-dc3:
     image: pgcheck-postgres
     ports:
+        - "5432"
         - "6432"
     command: [ "replica", "shard02-dc2.pgcheck.net" ]
     hostname: shard02-dc3

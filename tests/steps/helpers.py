@@ -3,6 +3,7 @@
 
 import logging
 import time
+import threading
 
 import database
 import moby
@@ -69,15 +70,17 @@ def container_action(container, action):
         raise RuntimeError('Unsupported action')
 
 
-def container_sql(container, statement):
+def container_conn_string(container, port=6432):
     port = moby.get_container_tcp_port(
-        moby.get_container_by_name(container), 6432)
+        moby.get_container_by_name(container), port)
     conn_string = "host=localhost port={port} dbname=db1 user=postgres " + \
                   "connect_timeout=1"
-    conn_string = conn_string.format(host=container, port=port)
+    return conn_string.format(port=port)
 
-    conn = database.Connection(conn_string)
-    res = conn.get(statement)
-    if res.errcode:
-        log.info(res)
-        raise RuntimeError('Could not execute statement')
+
+def run_threads(count, func, *args, **kwargs):
+    threads = []
+    for i in range(0, count):
+        t = threading.Thread(target=func, args=args, kwargs=kwargs)
+        #t.daemon = True
+        t.start()
