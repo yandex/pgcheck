@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 #
-#    Copyright (c) 2014-2017 Yandex <https://github.com/yandex>
-#    Copyright (c) 2014-2017 Other contributors as noted in the AUTHORS file.
+#    Copyright (c) 2014-2018 Yandex <https://github.com/yandex>
+#    Copyright (c) 2014-2018 Other contributors as noted in the AUTHORS file.
 #
 #    This is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU Lesser General Public License as published by
