@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import yaml
 import docker
 
 from steps import moby

@@ -5,9 +5,6 @@ import logging
 import time
 import threading
 
-import database
-import moby
-
 LOG = logging.getLogger('helpers')
 
 
@@ -34,6 +31,9 @@ def retry_on_assert(function):
 
 
 def assert_results_are_equal(expected_table, result):
+    """
+    Function that asserts if results in two tables are not the same
+    """
     expected_rows_num = len(expected_table.rows)
     actual_rows_num = len(result.records)
     assert expected_rows_num == actual_rows_num, \
@@ -57,30 +57,10 @@ def assert_results_are_equal(expected_table, result):
             "{}, expected {}, got {}".format(i, expected, actual)
 
 
-def container_action(container, action):
-    if action == 'start':
-        container.start()
-    elif action == 'stop':
-        container.stop()
-    elif action == 'pause':
-        container.pause()
-    elif action == 'unpause':
-        container.unpause()
-    else:
-        raise RuntimeError('Unsupported action')
-
-
-def container_conn_string(container, port=6432):
-    port = moby.get_container_tcp_port(
-        moby.get_container_by_name(container), port)
-    conn_string = "host=localhost port={port} dbname=db1 user=postgres " + \
-                  "connect_timeout=1"
-    return conn_string.format(port=port)
-
-
 def run_threads(count, func, *args, **kwargs):
-    threads = []
-    for i in range(0, count):
-        t = threading.Thread(target=func, args=args, kwargs=kwargs)
-        #t.daemon = True
-        t.start()
+    """
+    Function to start `count` threads and run `func` in each on them
+    """
+    for _ in range(0, count):
+        thread = threading.Thread(target=func, args=args, kwargs=kwargs)
+        thread.start()
