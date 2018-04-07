@@ -1,0 +1,27 @@
+# user name to run daemon as
+daemon_user: postgres
+log_file:
+# debug, info. warning, error, critical
+log_level: info
+pid_file: /var/run/pgcheck/pgcheck.pid
+# path, where to run script from ($PWD)
+working_dir: /tmp
+# time between iterations
+iteration_timeout: 1
+# assign or not priorities for replicas depending on load
+replics_weights: yes
+# account or not replication lag (replay_location) of replica
+# right now pgcheck increases base_prio by one on every megabyte of lag
+account_replication_lag: yes
+my_dc: DC1
+# list of DBs which to poll
+databases:
+  db1:
+    # connection string to local database with tables about shards, hosts and priorities
+    local_conn_string: dbname=db1 user=postgres
+    # additional parameters for connections strings for shards databases
+    append_conn_string: user=postgres sslmode=disable connect_timeout=1
+    # number of checks, after which the priority can be changed
+    quorum: 2
+    # number of priorities, about which we additionally store information
+    hysterisis: 1

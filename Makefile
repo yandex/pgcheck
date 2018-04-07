@@ -2,14 +2,15 @@
 
 all: docker check
 
-docker-clean:
-	docker-compose down
+build:
+	GOOS=linux GOARCH=amd64 go build -o pgcheck
 
 docker-build:
 	docker build --rm --no-cache -t pgcheck-postgres docker/pgcheck-postgres/
 	docker build --rm --no-cache -t pgcheck-plproxy docker/pgcheck-plproxy/
 
 docker-env:
+	docker-compose down
 	docker-compose up -d
 
 check:
@@ -18,10 +19,4 @@ check:
 check-world:
 	behave --show-timings --stop @tests/pgcheck.featureset
 
-docker: docker-clean docker-build docker-env
-
-clean:
-	rm -rf ../pgcheck_*.build ../pgcheck_*.changes ../pgcheck_*.deb
-
-install:
-	python setup.py install --root=$(DESTDIR) -O1
+docker: build docker-build docker-env

@@ -26,7 +26,6 @@ create table plproxy.hosts
 	  host_id integer not null,
 	  host_name varchar(100) not null,
 	  dc varchar(10),
-	  base_prio smallint null,
 	  prio_diff smallint null
 	);
 

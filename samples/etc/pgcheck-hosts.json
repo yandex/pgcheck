@@ -1,9 +1,0 @@
-{
-    "shard01-dc1.pgcheck.net": "DC1",
-    "shard01-dc2.pgcheck.net": "DC2",
-    "shard01-dc3.pgcheck.net": "DC3",
-    "shard02-dc1.pgcheck.net": "DC1",
-    "shard02-dc2.pgcheck.net": "DC2",
-    "shard02-dc3.pgcheck.net": "DC3",
-    "plproxy.pgcheck.net":  "DC1"
-}

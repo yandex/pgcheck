@@ -4,9 +4,7 @@ then
     /bin/bash
 elif [ "$1" = 'master' ]
 then
-    echo "Installing pgcheck through setup.py"
-    cd /tmp && sudo python setup.py install >/dev/null
-    sudo cp /tmp/samples/etc/pgcheck.conf /etc/pgcheck.conf
+    sudo cp /tmp/samples/etc/pgcheck.yml /etc/pgcheck.yml
     sudo cp /tmp/samples/etc/pgcheck-hosts.json /etc/pgcheck-hosts.json
     sudo mkdir -p /var/log/pgcheck /var/run/pgcheck
     sudo chown postgres /var/log/pgcheck /var/run/pgcheck
@@ -28,7 +26,7 @@ then
     psql db1 -f /tmp/samples/sql/50_select_part.sql
     psql db1 -f /tmp/samples/sql/99_data.sql
 
-    pgcheck --no-detach --log-file=/dev/stderr
+    /tmp/pgcheck
 else
     eval "$@"
 fi

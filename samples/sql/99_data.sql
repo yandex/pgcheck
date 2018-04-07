@@ -1,12 +1,12 @@
 INSERT INTO plproxy.parts VALUES (0), (1);
 INSERT INTO plproxy.key_ranges VALUES (0, 0, 0, 511), (1, 1, 512, 1023);
-INSERT INTO plproxy.hosts (host_id, host_name, prio_diff) VALUES
-    (1, 'shard01-dc1.pgcheck.net', NULL),
-    (2, 'shard01-dc2.pgcheck.net', NULL),
-    (3, 'shard01-dc3.pgcheck.net', 5),
-    (4, 'shard02-dc1.pgcheck.net', NULL),
-    (5, 'shard02-dc2.pgcheck.net', NULL),
-    (6, 'shard02-dc3.pgcheck.net', NULL);
+INSERT INTO plproxy.hosts (host_id, host_name, dc, prio_diff) VALUES
+    (1, 'shard01-dc1.pgcheck.net', 'DC1', NULL),
+    (2, 'shard01-dc2.pgcheck.net', 'DC2', NULL),
+    (3, 'shard01-dc3.pgcheck.net', 'DC3', 5),
+    (4, 'shard02-dc1.pgcheck.net', 'DC1', NULL),
+    (5, 'shard02-dc2.pgcheck.net', 'DC2', NULL),
+    (6, 'shard02-dc3.pgcheck.net', 'DC3', NULL);
 INSERT INTO plproxy.connections VALUES
     (1, 'host=shard01-dc1.pgcheck.net port=6432 dbname=db1'),
     (2, 'host=shard01-dc2.pgcheck.net port=6432 dbname=db1'),

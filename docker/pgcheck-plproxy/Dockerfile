@@ -8,13 +8,11 @@ ENV PG_VERSION ${pg_version}
 
 USER root
 
+COPY entrypoint.sh /entrypoint.sh
+
 RUN apt-get update -qq \
     && apt-get install -y \
-        postgresql-${pg_version}-plproxy \
-        python-pip \
-    && pip install -U setuptools
-
-COPY entrypoint.sh /entrypoint.sh
+        postgresql-${pg_version}-plproxy
 
 EXPOSE 6432
 
