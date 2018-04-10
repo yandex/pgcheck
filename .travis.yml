@@ -1,0 +1,13 @@
+language: go
+sudo: required
+cache: false
+go:
+    - "1.10"
+services:
+    - docker
+before_install:
+    - sudo pip install -r tests/requirements.txt
+script:
+    - go get github.com/lib/pq github.com/spf13/viper
+    - make docker
+    - make check-world

@@ -1,5 +1,6 @@
 # Pgcheck
 [![Go Report Card](https://goreportcard.com/badge/github.com/yandex/pgcheck)](https://goreportcard.com/report/github.com/yandex/pgcheck)
+[![Build Status](https://travis-ci.org/yandex/pgcheck.svg?branch=master)](https://travis-ci.org/yandex/pgcheck)
 
 Tool for monitoring backend databases from PL/Proxy hosts and changing `plproxy.get_cluster_partitions` function output.
 

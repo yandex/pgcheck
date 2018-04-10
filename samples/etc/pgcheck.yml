@@ -18,7 +18,7 @@ my_dc: DC1
 databases:
   db1:
     # connection string to local database with tables about shards, hosts and priorities
-    local_conn_string: dbname=db1 user=postgres
+    local_conn_string: dbname=db1 user=postgres sslmode=disable
     # additional parameters for connections strings for shards databases
     append_conn_string: user=postgres sslmode=disable connect_timeout=1
     # number of checks, after which the priority can be changed

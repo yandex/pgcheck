@@ -33,7 +33,7 @@ Feature: Infrastructure works correctly
             | host=shard02-dc1.pgcheck.net port=6432 dbname=db1 |
 
          When we unpause "shard01-dc2" container
-         Then within 12 seconds connection strings for "ro" cluster changes to:
+         Then within 5 seconds connection strings for "ro" cluster changes to:
             | get_cluster_partitions                            |
             | host=shard01-dc2.pgcheck.net port=6432 dbname=db1 |
             | host=shard02-dc1.pgcheck.net port=6432 dbname=db1 |

@@ -98,7 +98,7 @@ def when_action_connections(context, action, container_name): # pylint: disable=
         res = conn.get('SELECT now(), pg_sleep(60)')
         LOG.info(res)
 
-    conn_string = moby.container_conn_string(container_name, port=5432)
+    conn_string = moby.container_conn_string(container_name)
 
     if action == 'open':
         helpers.run_threads(50, execute_pg_sleep, conn_string=conn_string)

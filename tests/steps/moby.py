@@ -36,12 +36,11 @@ def container_action(container, action):
         raise RuntimeError('Unsupported action')
 
 
-def container_conn_string(container, port=6432):
+def container_conn_string(container):
     """
     Returns connection string to container
     """
-    port = get_container_tcp_port(
-        get_container_by_name(container), port)
+    port = get_container_tcp_port(get_container_by_name(container), 6432)
     conn_string = "host=localhost port={port} dbname=db1 user=postgres " + \
                   "connect_timeout=1"
     return conn_string.format(port=port)
