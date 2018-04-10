@@ -6,13 +6,14 @@ log_level: info
 pid_file: /var/run/pgcheck/pgcheck.pid
 # path, where to run script from ($PWD)
 working_dir: /tmp
-# time between iterations
+# time between iterations (in seconds)
 iteration_timeout: 1
 # assign or not priorities for replicas depending on load
 replics_weights: yes
 # account or not replication lag (replay_location) of replica
 # right now pgcheck increases base_prio by one on every megabyte of lag
 account_replication_lag: yes
+# DC of PL/Proxy host
 my_dc: DC1
 # list of DBs which to poll
 databases:
