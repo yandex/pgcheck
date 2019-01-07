@@ -97,6 +97,7 @@ services:
         - ./:/tmp/
     ports:
         - "6432"
+        - "8080"
     hostname: plproxy
     domainname: pgcheck.net
     init: true

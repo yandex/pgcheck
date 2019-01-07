@@ -8,19 +8,24 @@ import (
 	_ "github.com/lib/pq"
 )
 
+const maxChannelsSize = 100
+
 func main() {
 	var config Config
 	config = parseConfig()
 	initLogging(&config)
 
+	statsChan := make(chan statsState, maxChannelsSize)
+	go startStatsServer(config, statsChan)
+
 	for db := range config.Databases {
-		go processDB(db, &config)
+		go processDB(db, &config, statsChan)
 	}
 
 	handleSignals()
 }
 
-func processDB(dbname string, config *Config) {
+func processDB(dbname string, config *Config, statsChan chan statsState) {
 	var db database
 	db.name = dbname
 	db.config = config.Databases[dbname]
@@ -34,6 +39,7 @@ func processDB(dbname string, config *Config) {
 		updateHostsState(hosts, config, dbname)
 		correctPrioForHostsInShard(shards, hosts)
 		updatePriorities(db.pool, hosts)
+		sendStats(statsChan, dbname, hosts, shards)
 		time.Sleep(time.Second)
 	}
 }
@@ -132,4 +138,12 @@ func updatePriorities(db *sql.DB, hostsInfo *map[string]*host) {
 				hostname, s.NeededPrio)
 		}
 	}
+}
+
+func sendStats(ch chan statsState, dbname string, hosts *map[string]*host, shards *map[int][]string) {
+	if len(ch) == maxChannelsSize {
+		log.Printf("Could not send stats for DB %s since channel is full", dbname)
+		return
+	}
+	ch <- statsState{dbname, *hosts, *shards}
 }
