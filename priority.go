@@ -14,8 +14,8 @@ const (
 )
 
 type hostPrio struct {
-	currentPrio priority
-	neededPrio  priority
+	CurrentPrio priority
+	NeededPrio  priority
 }
 
 func prioIsNear(currentPrio, newPrio priority) bool {
@@ -29,18 +29,18 @@ func prioIsNear(currentPrio, newPrio priority) bool {
 }
 
 func stateToPrio(host *host, state *hostState, myDC *string) priority {
-	if !state.isAlive {
+	if !state.IsAlive {
 		return deadHostPrio
-	} else if state.isPrimary {
+	} else if state.IsPrimary {
 		return alivePrimaryPrio
 	}
 
 	prio := aliveStandbyPrio
-	if host.dc != *myDC {
+	if host.DC != *myDC {
 		prio += 10
 	}
-	prio += priority(state.replicationLag)
-	prio += priority(state.sessionsRatio * 100.0 / 2)
+	prio += priority(state.ReplicationLag)
+	prio += priority(state.SessionsRatio * 100.0 / 2)
 
 	// prioDiff may be negative so we cast everything to int first
 	// and then back to priority type

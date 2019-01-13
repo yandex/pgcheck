@@ -8,31 +8,31 @@ import (
 )
 
 type hostInfo struct {
-	name     string
+	Name     string `json:"name"`
 	connStr  string
-	dc       string
+	DC       string `json:"dc"`
 	prioDiff int
 	partID   int
 }
 
 type hostState struct {
-	isAlive        bool
-	isPrimary      bool
-	replicationLag uint
-	sessionsRatio  float64
+	IsAlive        bool    `json:"alive"`
+	IsPrimary      bool    `json:"primary"`
+	ReplicationLag uint    `json:"replication_lag"`
+	SessionsRatio  float64 `json:"sessions_ratio"`
 }
 
 var defaultHostState = hostState{
-	isAlive:        false,
-	isPrimary:      false,
-	replicationLag: 0,
-	sessionsRatio:  0,
+	IsAlive:        false,
+	IsPrimary:      false,
+	ReplicationLag: 0,
+	SessionsRatio:  0,
 }
 
 type hostAux struct {
 	connectionPool *sql.DB
 	statesChan     chan hostState
-	lastStates     []hostState
+	LastStates     []hostState `json:"last_states"`
 }
 
 type host struct {
@@ -55,13 +55,13 @@ func buildHostInfo(db *database, hostname string) *host {
 				plproxy.hosts h USING (host_id) JOIN
 				plproxy.connections c USING (conn_id)
 		  WHERE host_name = $1`, hostname)
-	err := row.Scan(&host.name, &host.connStr, &dc, &prioDiff, &host.partID)
+	err := row.Scan(&host.Name, &host.connStr, &dc, &prioDiff, &host.partID)
 	if err != nil {
 		log.Printf("Host %s is wrong: %v", hostname, err)
 	}
 
 	if dc.Valid {
-		host.dc = dc.String
+		host.DC = dc.String
 	}
 	if prioDiff.Valid {
 		host.prioDiff = int(prioDiff.Int64)
@@ -70,7 +70,7 @@ func buildHostInfo(db *database, hostname string) *host {
 
 	maxStatesCount := int(db.config.Quorum + db.config.Hysterisis)
 	host.statesChan = make(chan hostState, maxStatesCount*3)
-	host.lastStates = make([]hostState, 0, maxStatesCount)
+	host.LastStates = make([]hostState, 0, maxStatesCount)
 
 	host.connectionPool, err = createPool(&host.connStr, false)
 	if err != nil {
@@ -97,7 +97,7 @@ func getHostState(host *host, config *Config, dbname string) *hostState {
 	case x := <-host.statesChan:
 		state = x
 	case <-time.After(timeout):
-		log.Printf("Getting status of %s timed out", host.name)
+		log.Printf("Getting status of %s timed out", host.Name)
 		state = defaultHostState
 	}
 
@@ -109,7 +109,7 @@ func sendStateToStatesChan(host *host, myDC *string) {
 
 	db, err := getPool(host)
 	if err != nil {
-		log.Printf("Connection to %s failed: %v", host.name, err)
+		log.Printf("Connection to %s failed: %v", host.Name, err)
 		c <- defaultHostState
 		return
 	}
@@ -128,25 +128,25 @@ func fillState(db *sql.DB, host *host) hostState {
 		FROM public.pgcheck_poll()`)
 	err := row.Scan(&isMaster, &replicationLag, &sessionsRatio)
 	if err != nil {
-		log.Printf("Checking %s failed: %v", host.name, err)
+		log.Printf("Checking %s failed: %v", host.Name, err)
 		return state
 	}
 
-	state.isAlive = true
-	state.isPrimary = isMaster
-	state.replicationLag = replicationLag
-	state.sessionsRatio = sessionsRatio
+	state.IsAlive = true
+	state.IsPrimary = isMaster
+	state.ReplicationLag = replicationLag
+	state.SessionsRatio = sessionsRatio
 	return state
 }
 
 func updateLastStates(host *host, state *hostState, maxStatesCount int) *[]hostState {
 	var startFrom int
-	if len(host.lastStates) != maxStatesCount {
+	if len(host.LastStates) != maxStatesCount {
 		startFrom = 0
 	} else {
 		startFrom = 1
 	}
-	result := append(host.lastStates[startFrom:], *state)
+	result := append(host.LastStates[startFrom:], *state)
 	//log.Printf("Last states of %s are: %v", host.name, result)
 	return &result
 }
@@ -156,22 +156,22 @@ func updateState(hostsInfo *map[string]*host, hostname string, state *hostState,
 	host := hosts[hostname]
 	neededPrio := stateToPrio(host, state, &myDC)
 
-	if prioIsNear(host.currentPrio, neededPrio) {
+	if prioIsNear(host.CurrentPrio, neededPrio) {
 		hosts[hostname].hostState = *state
 		return
 	}
 
 	var cnt uint
-	for i := range hosts[hostname].lastStates {
-		prio := stateToPrio(host, &host.lastStates[i], &myDC)
+	for i := range hosts[hostname].LastStates {
+		prio := stateToPrio(host, &host.LastStates[i], &myDC)
 		if prioIsNear(prio, neededPrio) {
 			cnt++
 		}
 	}
 	if cnt >= quorum {
-		hosts[hostname].neededPrio = neededPrio
+		hosts[hostname].NeededPrio = neededPrio
 		hosts[hostname].hostState = *state
 	} else {
-		hosts[hostname].neededPrio = hosts[hostname].currentPrio
+		hosts[hostname].NeededPrio = hosts[hostname].CurrentPrio
 	}
 }

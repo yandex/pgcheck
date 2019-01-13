@@ -81,7 +81,7 @@ func updateHostsState(hostsInfo *map[string]*host, wholeConfig *Config, dbname s
 	for hostname := range hosts {
 		host := hosts[hostname]
 		state := getHostState(host, wholeConfig, dbname)
-		hosts[hostname].lastStates = *updateLastStates(host, state, maxStatesCount)
+		hosts[hostname].LastStates = *updateLastStates(host, state, maxStatesCount)
 		updateState(&hosts, hostname, state, config.Quorum, wholeConfig.DC)
 	}
 }
@@ -94,7 +94,7 @@ func correctPrioForHostsInShard(shardsInfo *map[int][]string, hostsInfo *map[str
 	for partID, hostsList := range shards {
 		var masters []string
 		for _, h := range hostsList {
-			if hosts[h].isAlive && hosts[h].isPrimary {
+			if hosts[h].IsAlive && hosts[h].IsPrimary {
 				masters = append(masters, h)
 			}
 		}
@@ -103,19 +103,17 @@ func correctPrioForHostsInShard(shardsInfo *map[int][]string, hostsInfo *map[str
 			log.Printf("%d masters in shard %d. Changing priority for "+
 				"all of them to %d", len(masters), partID, deadHostPrio)
 			for _, h := range masters {
-				hosts[h].neededPrio = deadHostPrio
-				hosts[h].isAlive = false
-				hosts[h].isPrimary = false
+				hosts[h].NeededPrio = deadHostPrio
 			}
 		}
 
 		if len(masters) == 0 {
 			for _, h := range hostsList {
-				if !hosts[h].isPrimary && hosts[h].isAlive {
+				if !hosts[h].IsPrimary && hosts[h].IsAlive {
 					// Do not account replication lag since master is dead
 					// and nothing is written
-					hosts[h].neededPrio =
-						hosts[h].neededPrio - priority(hosts[h].replicationLag)
+					hosts[h].NeededPrio =
+						hosts[h].NeededPrio - priority(hosts[h].ReplicationLag)
 				}
 			}
 		}
@@ -127,11 +125,11 @@ func updatePriorities(db *sql.DB, hostsInfo *map[string]*host) {
 	for hostname := range hosts {
 		s := hosts[hostname]
 		//log.Printf("%s: current %d, needed %d", s.name, s.currentPrio, s.neededPrio)
-		if s.currentPrio != s.neededPrio {
-			hosts[hostname].currentPrio = s.neededPrio
-			updateHostPriority(db, hostname, s.neededPrio)
+		if s.CurrentPrio != s.NeededPrio {
+			hosts[hostname].CurrentPrio = s.NeededPrio
+			updateHostPriority(db, hostname, s.NeededPrio)
 			log.Printf("Priority of host %s has been changed to %d ",
-				hostname, s.neededPrio)
+				hostname, s.NeededPrio)
 		}
 	}
 }
