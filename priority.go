@@ -48,7 +48,7 @@ func stateToPrio(host *host, state *hostState, myDC *string) priority {
 	if p < 0 {
 		p = int(deadHostPrio) - p
 	}
-	prio += priority(p)
+	prio = priority(p)
 
 	return prio
 }

@@ -96,7 +96,6 @@ func correctPrioForHostsInShard(shardsInfo *map[int][]string, hostsInfo *map[str
 	shards := *shardsInfo
 	hosts := *hostsInfo
 
-	// TODO: write tests for this feature
 	for partID, hostsList := range shards {
 		var masters []string
 		for _, h := range hostsList {
@@ -113,7 +112,7 @@ func correctPrioForHostsInShard(shardsInfo *map[int][]string, hostsInfo *map[str
 			}
 		}
 
-		if len(masters) == 0 {
+		if len(masters) != 1 {
 			for _, h := range hostsList {
 				if !hosts[h].IsPrimary && hosts[h].IsAlive {
 					// Do not account replication lag since master is dead

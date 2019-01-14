@@ -1,9 +1,14 @@
 .PHONY: clean all
 
-all: docker check
+all: unit-tests docker check
 
 build:
 	GOOS=linux GOARCH=amd64 go build -o pgcheck
+
+unit-tests:
+	go test
+
+unit: unit-tests
 
 docker-build:
 	docker build --rm --no-cache -t pgcheck-postgres docker/pgcheck-postgres/

@@ -8,6 +8,7 @@ services:
 before_install:
     - sudo pip install -r tests/requirements.txt
 script:
-    - go get github.com/lib/pq github.com/spf13/viper
+    - go get github.com/lib/pq github.com/spf13/viper github.com/stretchr/testify/assert
+    - go test
     - make docker
     - make check-world

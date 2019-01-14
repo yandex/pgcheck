@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type testCase struct {
+type CountStatsForShardTestCase struct {
 	name       string
 	inputState []byte
 	neededStat Statistics
@@ -23,7 +23,7 @@ var shardsMap = map[int][]string{
 	},
 }
 
-var testCases = []testCase{
+var CountStatsForShardTestCases = []CountStatsForShardTestCase{
 	{
 		"NormalShard",
 		[]byte(`{
@@ -261,12 +261,12 @@ var testCases = []testCase{
 }
 
 func TestCountStatsForShard(t *testing.T) {
-	for _, test := range testCases {
-		testOneCase(t, test)
+	for _, test := range CountStatsForShardTestCases {
+		testOneCountStatsForShardCase(t, test)
 	}
 }
 
-func testOneCase(t *testing.T, test testCase) {
+func testOneCountStatsForShardCase(t *testing.T, test CountStatsForShardTestCase) {
 	t.Run(test.name, func(t *testing.T) {
 		hostsMap := make(map[string]host)
 		err := json.Unmarshal(test.inputState, &hostsMap)
