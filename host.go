@@ -50,12 +50,12 @@ func buildHostInfo(db *database, hostname string) *host {
 	)
 	// We assume here that one host may be strictly in one shard
 	row := db.pool.QueryRow(
-		`SELECT h.host_name, c.conn_string, h.dc, h.prio_diff, p.part_id
+		`SELECT h.host_name, c.conn_string, h.dc, h.prio_diff, p.part_id, p.priority
 		   FROM plproxy.priorities p JOIN
 				plproxy.hosts h USING (host_id) JOIN
 				plproxy.connections c USING (conn_id)
 		  WHERE host_name = $1`, hostname)
-	err := row.Scan(&host.Name, &host.connStr, &dc, &prioDiff, &host.partID)
+	err := row.Scan(&host.Name, &host.connStr, &dc, &prioDiff, &host.partID, &host.CurrentPrio)
 	if err != nil {
 		log.Printf("Host %s is wrong: %v", hostname, err)
 	}

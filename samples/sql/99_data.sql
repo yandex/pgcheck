@@ -15,7 +15,7 @@ INSERT INTO plproxy.connections VALUES
     (5, 'host=shard02-dc2.pgcheck.net port=6432 dbname=db1'),
     (6, 'host=shard02-dc3.pgcheck.net port=6432 dbname=db1');
 INSERT INTO plproxy.priorities VALUES
-    (0, 1, 1, 0),
+    (0, 1, 1, 100),
     (0, 2, 2, 10),
     (0, 3, 3, 20),
     (1, 4, 4, 10),
